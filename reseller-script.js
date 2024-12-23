@@ -234,7 +234,10 @@ async function viewDevices(userId) {
         const devicesRef = db.collection("users").doc(userId).collection("devices");
         const querySnapshot = await devicesRef.get();
 
-        const deviceList = document.getElementById("device-list"); // Asegúrate de tener este contenedor en tu HTML
+        // Obtener o limpiar el contenedor de dispositivos
+        const deviceContainer = document.getElementById("device-container");
+        const deviceList = document.getElementById("device-list");
+        deviceContainer.style.display = "block"; // Mostrar contenedor de dispositivos
         deviceList.innerHTML = ""; // Limpiar la lista de dispositivos
 
         if (querySnapshot.empty) {
@@ -257,6 +260,18 @@ async function viewDevices(userId) {
         alert("Hubo un problema al cargar los dispositivos.");
     }
 }
+
+// Limpiar dispositivos - Se ejecuta al iniciar sesión o actualizar la página
+function clearDeviceList() {
+    const deviceContainer = document.getElementById("device-container");
+    const deviceList = document.getElementById("device-list");
+    deviceContainer.style.display = "none"; // Ocultar el contenedor de dispositivos
+    deviceList.innerHTML = ""; // Limpiar la lista de dispositivos
+}
+
+// Llamar a `clearDeviceList` al cargar la página o cambiar sesión
+window.addEventListener("load", clearDeviceList);
+
 
 // Eliminar Dispositivo
 async function deleteDevice(userId, deviceId) {

@@ -233,3 +233,10 @@ table button:hover {
     margin: 0;
     padding: 0;
 }
+#device-container {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
