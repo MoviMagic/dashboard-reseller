@@ -213,6 +213,7 @@ async function loadUsers() {
 async function renewUser(userId, months) {
     try {
         console.log(`Intentando renovar usuario con ID: ${userId} por ${months} meses.`);
+
         if (!loggedInResellerId) throw new Error("El reseller no está logeado.");
 
         const resellerDoc = await db.collection("resellers").doc(loggedInResellerId).get();
@@ -221,29 +222,35 @@ async function renewUser(userId, months) {
         const currentCredits = resellerDoc.data().credits;
         if (currentCredits < months) throw new Error("Créditos insuficientes.");
 
-        // Descontar créditos y renovar usuario
+        // Descontar créditos al reseller
         await db.collection("resellers").doc(loggedInResellerId).update({
             credits: currentCredits - months
         });
 
         const userRef = db.collection("users").doc(userId);
         const userDoc = await userRef.get();
+
         if (userDoc.exists) {
             const expirationDate = userDoc.data().expirationDate.toDate();
             expirationDate.setMonth(expirationDate.getMonth() + months);
+
+            // Actualizar la fecha de expiración del usuario
             await userRef.update({
                 expirationDate: firebase.firestore.Timestamp.fromDate(expirationDate)
             });
-            console.log(`Usuario renovado por ${months} meses.`);
+
+            console.log(`Usuario renovado por ${months} meses. Fecha de expiración actualizada.`);
         }
 
-        // Actualizar créditos en el frontend
-        loadCredits();
+        // Actualizar la lista de usuarios
+        loadUsers(); // Cargar lista de usuarios creados por el reseller
+        loadCredits(); // Actualizar los créditos disponibles
     } catch (error) {
         console.error("Error al renovar usuario:", error);
         alert(`Error al renovar usuario: ${error.message}`);
     }
 }
+
 
 // eliminar
 async function deleteUser(userId) {
