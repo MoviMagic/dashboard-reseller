@@ -33,28 +33,57 @@ document.getElementById("reseller-login-form").addEventListener("submit", async 
     const password = document.getElementById("reseller-password").value;
 
     try {
+        // Autenticar al reseller con Firebase Authentication
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        console.log("Inicio de sesión exitoso para UID:", userCredential.user.uid);
 
-        // Buscar el documento del reseller en Firestore
-        const querySnapshot = await db.collection("resellers").where("email", "==", email).where("password", "==", password).get();
+        // Buscar el documento del reseller en Firestore usando el UID
+        const querySnapshot = await db.collection("resellers").where("email", "==", email).get();
         if (!querySnapshot.empty) {
             const doc = querySnapshot.docs[0];
-            loggedInResellerId = doc.id; // Guardar el ID del documento (resellerId)
+            loggedInResellerId = doc.id; // Guardar el ID del documento
             console.log("Reseller logeado con ID:", loggedInResellerId);
 
-            // Mostrar el panel y cargar datos
+            // Guardar resellerId en localStorage para mantener la sesión después de recargar
+            localStorage.setItem("loggedInResellerId", loggedInResellerId);
+
+            // Mostrar el panel de reseller y cargar datos
             document.getElementById("login-container").classList.add("hidden");
             document.getElementById("reseller-panel").classList.remove("hidden");
             loadCredits(); // Cargar los créditos del reseller
             loadUsers(); // Cargar los usuarios creados por el reseller
         } else {
-            throw new Error("Reseller no encontrado.");
+            throw new Error("Reseller no encontrado en Firestore.");
         }
     } catch (error) {
         console.error("Error al iniciar sesión:", error);
         alert("Error al iniciar sesión. Verifica tus credenciales.");
     }
 });
+
+// Verificar si el reseller ya está autenticado
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        console.log("Usuario autenticado:", user.uid);
+
+        // Recuperar loggedInResellerId de localStorage
+        const storedResellerId = localStorage.getItem("loggedInResellerId");
+        if (storedResellerId) {
+            loggedInResellerId = storedResellerId;
+
+            // Mostrar el panel y cargar datos
+            document.getElementById("login-container").classList.add("hidden");
+            document.getElementById("reseller-panel").classList.remove("hidden");
+            loadCredits(); // Cargar los créditos del reseller
+            loadUsers(); // Cargar los usuarios creados por el reseller
+        }
+    } else {
+        console.log("No hay usuario autenticado. Mostrando la página de login.");
+        document.getElementById("login-container").classList.remove("hidden");
+        document.getElementById("reseller-panel").classList.add("hidden");
+    }
+});
+
 
 
 // Cerrar sesión
