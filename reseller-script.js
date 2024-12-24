@@ -100,7 +100,7 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
   const name = document.getElementById("user-name").value;
   const email = document.getElementById("user-email").value;
   const password = document.getElementById("user-password").value;
-  const expirationDate = document.getElementById("expiration-date").value;
+  const expirationOption = document.getElementById("expiration-option").value;
 
   try {
     // UID del reseller autenticado
@@ -124,8 +124,19 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
     // Crear usuario en Authentication
     const newUser = await auth.createUserWithEmailAndPassword(email, password);
 
+    // Determinar la fecha de expiración según la opción seleccionada
+    const currentDate = new Date();
+    let expirationDate;
+    if (expirationOption === "2-hours") {
+      expirationDate = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000); // 2 horas en milisegundos
+    } else if (expirationOption === "1-month") {
+      expirationDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1)); // +1 mes
+    } else {
+      throw new Error("Opción de expiración no válida.");
+    }
+
     // Convertir fecha de expiración a Timestamp
-    const expirationTimestamp = firebase.firestore.Timestamp.fromDate(new Date(expirationDate));
+    const expirationTimestamp = firebase.firestore.Timestamp.fromDate(expirationDate);
 
     // Guardar usuario en Firestore con resellerId y adminId
     await db.collection("users").doc(newUser.user.uid).set({
@@ -150,6 +161,7 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
     alert(`Error al crear usuario: ${error.message}`);
   }
 });
+
 
 
 

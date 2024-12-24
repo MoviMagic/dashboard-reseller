@@ -23,24 +23,29 @@
       <h1>Panel de Reseller</h1>
       <button id="logout-btn">Cerrar sesión</button>
     </header>
-
-    <section>
+<br>
+    <br><section>
       <h2>Créditos Disponibles: <span id="available-credits">0</span></h2>
     </section>
-
-    <section>
+<br>
+    <br><section>
       <h2>Crear Usuario</h2>
       <form id="create-user-form">
-        <input type="text" id="user-name" placeholder="Nombre de Usuario" required>
-        <input type="email" id="user-email" placeholder="Correo Electrónico" required>
-        <input type="password" id="user-password" placeholder="Contraseña" required>
-        <input type="date" id="expiration-date" placeholder="Fecha de Expiración" required>
-        <button type="submit">Crear Usuario</button>
-      </form>
+  <input type="text" id="user-name" placeholder="Nombre de Usuario" required>
+  <input type="email" id="user-email" placeholder="Correo Electrónico" required>
+  <input type="password" id="user-password" placeholder="Contraseña" required>
+  <select id="expiration-option" required>
+    <option value="" disabled selected>Selecciona una opción</option>
+    <option value="2-hours">Demo de 2 horas</option>
+    <option value="1-month">1 mes</option>
+  </select>
+  <button type="submit">Crear Usuario</button>
+</form>
+
       <p id="credit-warning" class="hidden error-message">No tienes créditos suficientes para crear un nuevo usuario.</p>
     </section>
-
-    <section>
+<br>
+    <br><section>
   <h2>Lista de Usuarios</h2>
   <table>
     <thead>
@@ -58,9 +63,9 @@
   </table>
 </section>
 
-
+<br>
     <!-- Nueva sección para la lista de dispositivos -->
-    <section>
+<br><section>
   <h2>Lista de Dispositivos</h2>
   <table>
     <thead>
