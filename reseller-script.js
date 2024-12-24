@@ -103,8 +103,12 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
   const expirationOption = document.getElementById("expiration-option").value;
 
   try {
-    // UID del reseller autenticado
-    const resellerId = auth.currentUser.uid;
+    // Revalidar la sesión del reseller autenticado
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error("El reseller no está autenticado. Por favor, inicia sesión nuevamente.");
+    }
+    const resellerId = currentUser.uid;
 
     // Obtener datos del reseller
     const resellerDoc = await db.collection("resellers").doc(resellerId).get();
@@ -113,12 +117,13 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
     }
 
     const resellerData = resellerDoc.data();
+
+    // Validar si hay créditos disponibles
     if (resellerData.credits <= 0) {
-      alert("No tienes suficientes créditos para crear un usuario.");
+      alert("No tienes suficientes créditos para crear un usuario, incluso para la opción de demo.");
       return;
     }
 
-    // Obtener el adminId del reseller
     const adminId = resellerData.adminId;
 
     // Crear usuario en Authentication
@@ -128,32 +133,39 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
     const currentDate = new Date();
     let expirationDate;
     if (expirationOption === "2-hours") {
-      expirationDate = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000); // 2 horas en milisegundos
+      expirationDate = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000); // 2 horas
     } else if (expirationOption === "1-month") {
       expirationDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1)); // +1 mes
     } else {
       throw new Error("Opción de expiración no válida.");
     }
 
-    // Convertir fecha de expiración a Timestamp
     const expirationTimestamp = firebase.firestore.Timestamp.fromDate(expirationDate);
 
-    // Guardar usuario en Firestore con resellerId y adminId
+    // Guardar usuario en Firestore
     await db.collection("users").doc(newUser.user.uid).set({
       username: name,
       email: email,
       password: password,
       expirationDate: expirationTimestamp,
-      resellerId: resellerId, // Asociar al reseller que creó este usuario
-      adminId: adminId, // Asociar al administrador que creó al reseller
+      resellerId: resellerId,
+      adminId: adminId,
     });
 
-    // Descontar crédito del reseller
-    await db.collection("resellers").doc(resellerId).update({
-      credits: resellerData.credits - 1,
-    });
+    // Descontar crédito solo para la opción de "1 mes"
+    if (expirationOption === "1-month") {
+      await db.collection("resellers").doc(resellerId).update({
+        credits: resellerData.credits - 1,
+      });
+      alert("Usuario creado con éxito y se descontó 1 crédito.");
+    } else {
+      alert("Usuario demo creado con éxito (sin descontar créditos).");
+    }
 
-    alert("Usuario creado con éxito.");
+    // Reautenticación después de la operación para garantizar persistencia
+    await auth.updateCurrentUser(currentUser);
+
+    // Actualizar usuarios y créditos
     loadUsers(); // Recargar usuarios
     loadCredits(); // Recargar créditos
   } catch (error) {
@@ -161,8 +173,6 @@ document.getElementById("create-user-form").addEventListener("submit", async (e)
     alert(`Error al crear usuario: ${error.message}`);
   }
 });
-
-
 
 
 
